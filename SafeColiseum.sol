@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.10;
 
 import "./Address.sol";
 import "./SafeMath.sol";
@@ -14,7 +14,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
 
     // Baisc contract variable declaration
     string private _name = "SafeColiseum";
-    string private _symbol = "SCOM";
+    string private _symbol = "SCOLT";
     uint8 private _decimals = 8;
     uint256 private _initial_total_supply = 210000000 * 10**_decimals;
     uint256 private _total_supply = 210000000 * 10**_decimals;
@@ -34,10 +34,10 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     uint256 private _governance_supply = (4 * _total_supply) / 100;
     uint256 private _investment_parter_supply = (10 * _total_supply) / 100;
 
-    // Transaction Fee AirDrop variable
-    uint256 private _fee_distribute_after = 100 * 10**_decimals;
-    uint256 private _fee_distribution_eligibility = 10 * 10**_decimals;
-    uint256 private _pending_fee_to_distribute = 0; // fee collection till now, after last distribution
+    // Transaction contribution AirDrop variable
+    uint256 private _contribution_distribute_after = 100 * 10**_decimals;
+    uint256 private _contribution_distribution_eligibility = 10 * 10**_decimals;
+    uint256 private _pending_contribution_to_distribute = 0; // contribution collection till now, after last distribution
 
     // Burning till total of 50% supply
     uint256 private _burning_till = _total_supply / 2;
@@ -46,17 +46,17 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     // Whale defination
     uint256 private _whale_per = (_total_supply / 100); // 1% of total tokans consider tobe whale
 
-    // fee structure defination, this will be in % ranging from 0 - 100
-    uint256 private _normal_tx_fee = 2;
-    uint256 private _whale_tx_fee = 5;
+    // contribution structure defination, this will be in % ranging from 0 - 100
+    uint256 private _normal_contribution_per = 2;
+    uint256 private _whale_contribution_per = 5;
 
-    // below is percentage, consider _normal_tx_fee as 100%
+    // below is percentage, consider _normal_contribution_per as 100%
     uint256 private _normal_marketing_share = 25;
     uint256 private _normal_development_share = 7;
     uint256 private _normal_holder_share = 43;
     uint256 private _normal_burning_share = 25;
 
-    // below is percentage, consider _whale_tx_fee as 100%
+    // below is percentage, consider _whale_contribution_per as 100%
     uint256 private _whale_marketing_share = 30;
     uint256 private _whale_development_share = 10;
     uint256 private _whale_holder_share = 40;
@@ -69,7 +69,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     uint256 private _max_concurrent_sale_day = 2;
     uint256 private _cooling_days = 2;
     uint256 private _max_sell_per_director_per_day = 10000 * 10**_decimals;
-    uint256 private _inverstor_swap_lock_days = 2; // after 180 days will behave as normal purchase user.
+    uint256 private _investor_swap_lock_days = 2; // after 180 days will behave as normal purchase user.
 
     // Wallet specific declaration
     // UndefinedWallet : means 0 to check there is no wallet entry in Contract
@@ -86,7 +86,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         PoolOrAirdropWallet,
         IfoWallet,
         UnsoldTokenWallet,
-        ContractWallet
+        DexPairWallet
     }
 
     struct wallet_details {
@@ -97,7 +97,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         uint256 concurrent_sale_day_count;
         _DateTime last_sale_date;
         _DateTime joining_date;
-        bool fee_apply;
+        bool contribution_apply;
         bool antiwhale_apply;
         bool anti_dump;
         bool is_investor;
@@ -134,13 +134,13 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     address private _unsold_token_wallet = 0xC65fF1B1304Fc6d87215B982F214B5b58ebe790A;
 
     // Custom Event for making log entry for contract
-    event FeeAirDropUpdate(
+    event ContributionAirDropUpdate(
         uint256 _total_beneficiary_count,
         uint256 _distributed_amount,
         uint256 _total_eligible_circulation,
         uint256 _timestamp
     );
-    event FeeAddedToFeeDistributionVariable(uint256 fee);
+    event ContributionAddedToContributionDistributionVariable(uint256 contribution);
 
     constructor() {
         // initial wallet adding process on contract launch
@@ -165,20 +165,20 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         _transfer(msg.sender, _future_team_wallet, _future_team_supply);
     }
 
-    function _create_wallet(address addr, type_of_wallet w_type) private {
-        bool fee = false;
+    function _create_wallet(address addr, type_of_wallet w_type, bool is_investor) private {
+        bool contribution = false;
         bool whale = false;
         bool dump = false;
-        bool inverstor = false;
+        bool investor = is_investor;
         if (
             w_type == type_of_wallet.DirectorWallet ||
             w_type == type_of_wallet.MarketingWallet ||
             w_type == type_of_wallet.GovernanceWallet ||
             w_type == type_of_wallet.DevelopmentWallet ||
-            w_type == type_of_wallet.ContractWallet ||
+            w_type == type_of_wallet.DexPairWallet ||
             w_type == type_of_wallet.GeneralWallet
         ) {
-            fee = true;
+            contribution = true;
         }
         if (
             w_type == type_of_wallet.DirectorWallet ||
@@ -204,10 +204,10 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                 0,
                 parseTimestamp(block.timestamp),
                 parseTimestamp(block.timestamp),
-                fee,
+                contribution,
                 whale,
                 dump,
-                inverstor
+                investor
             );
         } else {
             _wallets[addr] = wallet_details(
@@ -218,10 +218,10 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                 0,
                 parseTimestamp(block.timestamp),
                 parseTimestamp(block.timestamp),
-                fee,
+                contribution,
                 whale,
                 dump,
-                inverstor
+                investor
             );
         }
         if (
@@ -232,7 +232,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
             w_type != type_of_wallet.PoolOrAirdropWallet &&
             w_type != type_of_wallet.DevelopmentWallet &&
             w_type != type_of_wallet.UnsoldTokenWallet &&
-            w_type != type_of_wallet.ContractWallet &&
+            w_type != type_of_wallet.DexPairWallet &&
             w_type != type_of_wallet.UndefinedWallet
         ) {
             _total_holder += 1;
@@ -241,20 +241,17 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     }
 
     function _initialize_default_wallet_and_rules() private {
-        _create_wallet(msg.sender, type_of_wallet.GenesisWallet); // Adding Ginesis wallets
-        _create_wallet(_director_wallet_1, type_of_wallet.DirectorWallet); // Adding Directors 1 wallets
-        _create_wallet(_director_wallet_2, type_of_wallet.DirectorWallet); // Adding Directors 2 wallets
-        _create_wallet(_marketing_wallet, type_of_wallet.MarketingWallet); // Adding Marketing Wallets
-        _create_wallet(_liquidity_wallet, type_of_wallet.LiquidityWallet); // Adding Liquidity Wallets
-        _create_wallet(_governance_wallet, type_of_wallet.GovernanceWallet); // Adding Governance Wallets
-        _create_wallet(
-            _pool_airdrop_wallet,
-            type_of_wallet.PoolOrAirdropWallet
-        ); // Adding PoolOrAirdropWallet Wallet
-        _create_wallet(_future_team_wallet, type_of_wallet.FutureTeamWallet); // Adding FutureTeamWallet Wallet
-        _create_wallet(_ifo_wallet, type_of_wallet.IfoWallet); // Adding IFO Wallet
-        _create_wallet(_development_wallet, type_of_wallet.DevelopmentWallet); // Adding Development Wallet
-        _create_wallet(_unsold_token_wallet, type_of_wallet.UnsoldTokenWallet); // Adding Unsold Token Wallet
+        _create_wallet(msg.sender, type_of_wallet.GenesisWallet, false); // Adding Ginesis wallets
+        _create_wallet(_director_wallet_1, type_of_wallet.DirectorWallet, false); // Adding Directors 1 wallets
+        _create_wallet(_director_wallet_2, type_of_wallet.DirectorWallet, false); // Adding Directors 2 wallets
+        _create_wallet(_marketing_wallet, type_of_wallet.MarketingWallet, false); // Adding Marketing Wallets
+        _create_wallet(_liquidity_wallet, type_of_wallet.LiquidityWallet, false); // Adding Liquidity Wallets
+        _create_wallet(_governance_wallet, type_of_wallet.GovernanceWallet, false); // Adding Governance Wallets
+        _create_wallet(_pool_airdrop_wallet, type_of_wallet.PoolOrAirdropWallet, false); // Adding PoolOrAirdropWallet Wallet
+        _create_wallet(_future_team_wallet, type_of_wallet.FutureTeamWallet, false); // Adding FutureTeamWallet Wallet
+        _create_wallet(_ifo_wallet, type_of_wallet.IfoWallet, false); // Adding IFO Wallet
+        _create_wallet(_development_wallet, type_of_wallet.DevelopmentWallet, false); // Adding Development Wallet
+        _create_wallet(_unsold_token_wallet, type_of_wallet.UnsoldTokenWallet, false); // Adding Unsold Token Wallet
 
         // Marking default seller wallets so future transfer from this will be considered as purchase
         _sellers_check[msg.sender] = true; // genesis will be seller wallet
@@ -294,7 +291,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     }
 
     function pendingFeeToDistribute() public view returns (uint256) {
-        return _pending_fee_to_distribute;
+        return _pending_contribution_to_distribute;
     }
 
     function holderDetails() public view returns (uint256, address[] memory) {
@@ -302,14 +299,15 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     }
 
     function addSellerWallet(address account) public onlyOwner returns (bool) {
+        require(account.isContract(), "SCOLT : Only Contract(DEX) can be seller");
         if (_wallets[account].wallet_type == type_of_wallet.UndefinedWallet) {
             if (account.isContract()) {
-                _create_wallet(account, type_of_wallet.ContractWallet);
+                _create_wallet(account, type_of_wallet.DexPairWallet, false);
             } else {
-                _create_wallet(account, type_of_wallet.GeneralWallet);
+                _create_wallet(account, type_of_wallet.GeneralWallet, false);
             }
         } else {
-            _wallets[account].fee_apply = true;
+            _wallets[account].contribution_apply = true;
             _wallets[account].antiwhale_apply = false;
             _wallets[account].anti_dump = false;
         }
@@ -345,9 +343,9 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         address spender,
         uint256 amount
     ) private {
-        require(owner != address(0), "SCOM: approve from the zero address");
-        require(spender != address(0), "SCOM: approve to the zero address");
-        // require(_wallets[owner].wallet_type != type_of_wallet.GeneralWallet && _wallets[owner].wallet_type != type_of_wallet.UndefinedWallet, "SCOM: Only registered wallet allowed for approval.");
+        require(owner != address(0), "SCOLT :approve from the zero address");
+        require(spender != address(0), "SCOLT :approve to the zero address");
+        // require(_wallets[owner].wallet_type != type_of_wallet.GeneralWallet && _wallets[owner].wallet_type != type_of_wallet.UndefinedWallet, "SCOLT :Only registered wallet allowed for approval.");
         //TODO : Aproval logic goes here.
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
@@ -364,7 +362,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "SCOM: transfer amount exceeds allowance"));
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "SCOLT :transfer amount exceeds allowance"));
         return true;
     }
 
@@ -374,7 +372,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "SCOM: decreased allowance below zero"));
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "SCOLT :decreased allowance below zero"));
         return true;
     }
 
@@ -385,16 +383,21 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         returns (bool)
     {
         if (
-            _wallets[partner_address].wallet_type ==
-            type_of_wallet.UndefinedWallet
+            _wallets[partner_address].wallet_type == type_of_wallet.UndefinedWallet
         ) {
-            _create_wallet(partner_address, type_of_wallet.GeneralWallet);
-        } else {
-            _wallets[partner_address].is_investor = true;
-            _wallets[partner_address].joining_date = parseTimestamp(
-                block.timestamp
-            ); // Changing joining date as current date today for old accounts.
+            revert(
+                "SCOLT : New wallet address is not allowed to be investment partner."
+            );
         }
+        if (_wallets[partner_address].wallet_type != type_of_wallet.GeneralWallet) {
+            revert(
+                "SCOLT : Other than GeneralWallet are not allowed to be investment partner."
+            );
+        }
+        _wallets[partner_address].is_investor = true;
+        _wallets[partner_address].joining_date = parseTimestamp(
+            block.timestamp
+        );
         return true;
     }
 
@@ -436,122 +439,82 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
             sender
         ];
 
-        if (sender_wallet.wallet_type == type_of_wallet.GenesisWallet) {
-            return;
-        }
-
         // Checking if sender requested for any C2C transfer or not
         if (transferer_ctc_details.has_value) {
             if (transferer_ctc_details.allowed_till >= block.timestamp) {
                 if (!transferer_ctc_details.used) {
                     revert(
-                        "SCOM : You can not make transfer while applied for C2C transfer."
+                        "SCOLT : You can not make transfer while applied for C2C transfer."
                     );
                 }
             }
         }
 
-        // Sending to only seller restriction from predefined wallet types
-        if (
-            sender_wallet.wallet_type == type_of_wallet.GovernanceWallet ||
-            sender_wallet.wallet_type == type_of_wallet.LiquidityWallet ||
-            sender_wallet.wallet_type == type_of_wallet.IfoWallet ||
-            sender_wallet.wallet_type == type_of_wallet.DevelopmentWallet ||
-            sender_wallet.wallet_type == type_of_wallet.PoolOrAirdropWallet ||
-            sender_wallet.wallet_type == type_of_wallet.MarketingWallet
-        ) {
-            if (!_sellers_check[recipient]) {
-                revert(
-                    "SCOM : This type of wallet can not perform this transaction."
-                );
-            }
-            if (
-                sender_wallet.wallet_type == type_of_wallet.PoolOrAirdropWallet
-            ) {
-                if (
-                    recipient_wallet.wallet_type !=
-                    type_of_wallet.ContractWallet
-                ) {
-                    revert(
-                        "SCOM : You can only send tokens to Contract sellers."
-                    );
-                }
-            }
-            if (sender_wallet.wallet_type == type_of_wallet.MarketingWallet) {
-                if (!recipient_wallet.is_investor) {
-                    revert("SCOM : You can only send tokens to Inverstor.");
-                }
-            }
-        }
-
-        // Reciving restrictions from genesis only for predefined wallet types
-        if (
-            recipient_wallet.wallet_type == type_of_wallet.LiquidityWallet ||
-            recipient_wallet.wallet_type ==
-            type_of_wallet.PoolOrAirdropWallet ||
-            recipient_wallet.wallet_type == type_of_wallet.FutureTeamWallet ||
-            recipient_wallet.wallet_type == type_of_wallet.IfoWallet ||
-            recipient_wallet.wallet_type == type_of_wallet.DevelopmentWallet
-        ) {
-            if (sender_wallet.wallet_type != type_of_wallet.GenesisWallet) {
-                revert("SCOM : Recipient can not reciecve from your wallet.");
-            }
-        }
-
-        // Only General Wallet sending restriction.
-        if (
-            sender_wallet.wallet_type == type_of_wallet.PoolOrAirdropWallet ||
-            sender_wallet.wallet_type == type_of_wallet.FutureTeamWallet
-        ) {
-            if (recipient_wallet.wallet_type != type_of_wallet.GeneralWallet) {
-                revert("SCOM : Can not send to given wallet type.");
+        // Inter seller transfer not allowed
+        if (_sellers_check[recipient]) {
+            if (_sellers_check[sender]) {
+                revert("SCOLT : Inter seller exchange is not allowed.");
             }
         }
 
         // Checking if sender or reciver is contract or not and also registered seller or not
+        // Only Liquidity Wallet can create new pair in dex. ( Unregister Contract )
         if (
-            recipient.isContract() &&
-            sender_wallet.wallet_type == type_of_wallet.GeneralWallet
+            recipient.isContract()
         ) {
-            if (!_sellers_check[recipient]) {
-                revert(
-                    "SCOM : You are trying to reach unregistered contract ( considered as seller )."
-                );
+            if (_sellers_check[recipient]) {
+                if (
+                    sender_wallet.wallet_type == type_of_wallet.UndefinedWallet ||
+                    sender_wallet.wallet_type == type_of_wallet.DexPairWallet ||
+                    sender_wallet.wallet_type == type_of_wallet.FutureTeamWallet
+                ) {
+                    revert(
+                        "SCOLT : You are not allowed to send tokens to DexPairWallet"
+                    );
+                }
+            } else {
+                if (
+                    sender_wallet.wallet_type != type_of_wallet.LiquidityWallet
+                ) {
+                    revert(
+                        "SCOLT : You are trying to reach unregistered DexPairWallet."
+                    );
+                }
             }
         }
 
-        // Checking that only regular user can send token back to genesis wallet
-        if (recipient_wallet.wallet_type == type_of_wallet.GenesisWallet) {
-            require(
-                sender_wallet.wallet_type == type_of_wallet.GeneralWallet,
-                "SCOM : You can not send your tokens back to genesis wallet"
-            );
+        if (
+            sender.isContract()
+        ) {
+            if (!_sellers_check[sender]) {
+                if (
+                    recipient_wallet.wallet_type != type_of_wallet.LiquidityWallet
+                ) {
+                    revert(
+                        "SCOLT : Unregistered DexPairWallet are not allowed to send tokens."
+                    );
+                }
+            }
         }
 
-        // Checking inverstor block rule, time based
+        // FutureTeamWallet Only can send to GeneralWallet and recieve from genesis
+        if ( sender_wallet.wallet_type == type_of_wallet.FutureTeamWallet ) {
+            require(recipient_wallet.wallet_type == type_of_wallet.GeneralWallet, "SCOLT : You are not allowed to send any tokens other than General Type of Wallet.");
+        }
+        if ( recipient_wallet.wallet_type == type_of_wallet.FutureTeamWallet ) {
+            require(sender_wallet.wallet_type == type_of_wallet.GenesisWallet, "SCOLT : You are not allowed to send any tokens to Future Team Wallet.");
+        }
+
+        // Checking investor block rule, time based
         if (sender_wallet.is_investor) {
             require(
                 _check_time_condition(
                     block.timestamp,
                     toTimestampFromDateTime(sender_wallet.joining_date),
-                    _inverstor_swap_lock_days
+                    _investor_swap_lock_days
                 ),
-                "SCOM : Investor account can perform any transfer after 180 days only"
+                "SCOLT : Investor account can perform any transfer after 180 days only"
             );
-        }
-
-        if (_sellers_check[recipient]) {
-            require(
-                sender_wallet.wallet_type != type_of_wallet.FutureTeamWallet,
-                "SCOM : You are not allowed to sell token from your wallet type"
-            );
-            require(
-                sender_wallet.wallet_type != type_of_wallet.UnsoldTokenWallet,
-                "SCOM : You are not allowed to sell token from your wallet type"
-            );
-            if (_sellers_check[sender]) {
-                revert("SCOM : Inter seller exchange is not allowed.");
-            }
         }
 
         if (_sellers_check[recipient] && sender_wallet.anti_dump) {
@@ -568,7 +531,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                 ) {
                     if (amount > _max_sell_per_director_per_day) {
                         revert(
-                            "SCOM : Director can only send 10000 SCOM every 24 hours"
+                            "SCOLT : Director can only send 10000 SCOM every 24 hours"
                         );
                     }
                 } else {
@@ -577,7 +540,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                         _max_sell_per_director_per_day
                     ) {
                         revert(
-                            "SCOM : Director can only send 10000 SCOM every 24 hours"
+                            "SCOLT : Director can only send 10000 SCOM every 24 hours"
                         );
                     }
                 }
@@ -607,7 +570,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                                 _max_sell_amount_whale
                             ) {
                                 revert(
-                                    "SCOM : You can not sell more than 5000 SCOM in past 24 hours."
+                                    "SCOLT : You can not sell more than 5000 SCOM in past 24 hours."
                                 );
                             }
                         } else {
@@ -616,7 +579,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                                 _max_sell_amount_normal
                             ) {
                                 revert(
-                                    "SCOM : You can not sell more than 2000 SCOM in past 24 hours."
+                                    "SCOLT : You can not sell more than 2000 SCOM in past 24 hours."
                                 );
                             }
                         }
@@ -631,7 +594,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                             )
                         ) {
                             revert(
-                                "SCOM : Concurrent sell for more than 6 days not allowed. You can not sell for next 72 Hours"
+                                "SCOLT : Concurrent sell for more than 6 days not allowed. You can not sell for next 72 Hours"
                             );
                         } else {
                             if (
@@ -640,13 +603,13 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                             ) {
                                 if (amount > _max_sell_amount_whale) {
                                     revert(
-                                        "SCOM : You can not sell more than 5000 SCOM in past 24 hours."
+                                        "SCOLT : You can not sell more than 5000 SCOM in past 24 hours."
                                     );
                                 }
                             } else {
                                 if (amount > _max_sell_amount_normal) {
                                     revert(
-                                        "SCOM : You can not sell more than 2000 SCOM in past 24 hours."
+                                        "SCOLT : You can not sell more than 2000 SCOM in past 24 hours."
                                     );
                                 }
                             }
@@ -671,7 +634,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                                 _max_sell_amount_whale
                             ) {
                                 revert(
-                                    "SCOM : You can not sell more than 5000 SCOM in past 24 hours."
+                                    "SCOLT : You can not sell more than 5000 SCOM in past 24 hours."
                                 );
                             }
                         } else {
@@ -680,7 +643,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                                 _max_sell_amount_normal
                             ) {
                                 revert(
-                                    "SCOM : You can not sell more than 2000 SCOM in past 24 hours."
+                                    "SCOLT : You can not sell more than 2000 SCOM in past 24 hours."
                                 );
                             }
                         }
@@ -691,13 +654,13 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                         ) {
                             if (amount > _max_sell_amount_whale) {
                                 revert(
-                                    "SCOM : You can not sell more than 5000 SCOM in past 24 hours."
+                                    "SCOLT : You can not sell more than 5000 SCOM in past 24 hours."
                                 );
                             }
                         } else {
                             if (amount > _max_sell_amount_normal) {
                                 revert(
-                                    "SCOM : You can not sell more than 2000 SCOM in past 24 hours."
+                                    "SCOLT : You can not sell more than 2000 SCOM in past 24 hours."
                                 );
                             }
                         }
@@ -811,7 +774,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         }
     }
 
-    function _fees(
+    function _contributions(
         address sender,
         address recipient,
         uint256 amount
@@ -822,66 +785,66 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         wallet_details storage sender_wallet = _wallets[sender];
         wallet_details storage recipient_Wallet = _wallets[recipient];
 
-        if (sender_wallet.fee_apply == false) {
+        if (sender_wallet.contribution_apply == false) {
             return (0, true);
         }
 
-        uint256 total_fees = 0;
-        uint256 marketing_fees = 0;
-        uint256 development_fees = 0;
-        uint256 holder_fees = 0;
+        uint256 total_contributions = 0;
+        uint256 marketing_contributions = 0;
+        uint256 development_contributions = 0;
+        uint256 holder_contributions = 0;
         uint256 burn_amount = 0;
 
-        // Calculate fees based on whale or not whale
+        // Calculate contributions based on whale or not whale
         if (
             sender_wallet.balance >= _whale_per &&
             sender_wallet.antiwhale_apply == true
         ) {
-            total_fees = ((amount * _whale_tx_fee) / 100);
-            marketing_fees = ((total_fees * _whale_marketing_share) / 100);
-            development_fees = ((total_fees * _whale_development_share) / 100);
-            holder_fees = ((total_fees * _whale_holder_share) / 100);
-            burn_amount = ((total_fees * _whale_burning_share) / 100);
+            total_contributions = ((amount * _whale_contribution_per) / 100);
+            marketing_contributions = ((total_contributions * _whale_marketing_share) / 100);
+            development_contributions = ((total_contributions * _whale_development_share) / 100);
+            holder_contributions = ((total_contributions * _whale_holder_share) / 100);
+            burn_amount = ((total_contributions * _whale_burning_share) / 100);
         } else {
-            total_fees = ((amount * _normal_tx_fee) / 100);
-            marketing_fees = ((total_fees * _normal_marketing_share) / 100);
-            development_fees = ((total_fees * _normal_development_share) / 100);
-            holder_fees = ((total_fees * _normal_holder_share) / 100);
-            burn_amount = ((total_fees * _normal_burning_share) / 100);
+            total_contributions = ((amount * _normal_contribution_per) / 100);
+            marketing_contributions = ((total_contributions * _normal_marketing_share) / 100);
+            development_contributions = ((total_contributions * _normal_development_share) / 100);
+            holder_contributions = ((total_contributions * _normal_holder_share) / 100);
+            burn_amount = ((total_contributions * _normal_burning_share) / 100);
         }
 
         // add cut to defined acounts
         if (_total_supply < (_initial_total_supply / 2)) {
-            total_fees = total_fees.sub(burn_amount);
+            total_contributions = total_contributions.sub(burn_amount);
             burn_amount = 0;
         }
 
-        bool sender_fee_deduct = false;
+        bool sender_contribution_deduct = false;
 
         // if contract type wallet then following condtion is default false
         if (
-            (sender_wallet.balance >= amount + total_fees) &&
-            (recipient_Wallet.wallet_type != type_of_wallet.ContractWallet)
+            (sender_wallet.balance >= amount + total_contributions) &&
+            (recipient_Wallet.wallet_type != type_of_wallet.DexPairWallet)
         ) {
-            if (marketing_fees > 0) {
+            if (marketing_contributions > 0) {
                 _wallets[_marketing_wallet].balance = _wallets[
                     _marketing_wallet
-                ].balance.add(marketing_fees);
-                emit Transfer(sender, _marketing_wallet, marketing_fees);
+                ].balance.add(marketing_contributions);
+                emit Transfer(sender, _marketing_wallet, marketing_contributions);
             }
 
-            if (development_fees > 0) {
+            if (development_contributions > 0) {
                 _wallets[_development_wallet].balance = _wallets[
                     _development_wallet
-                ].balance.add(development_fees);
-                emit Transfer(sender, _development_wallet, development_fees);
+                ].balance.add(development_contributions);
+                emit Transfer(sender, _development_wallet, development_contributions);
             }
 
-            if (holder_fees > 0) {
-                _pending_fee_to_distribute = _pending_fee_to_distribute.add(
-                    holder_fees
+            if (holder_contributions > 0) {
+                _pending_contribution_to_distribute = _pending_contribution_to_distribute.add(
+                    holder_contributions
                 );
-                emit FeeAddedToFeeDistributionVariable(holder_fees);
+                emit ContributionAddedToContributionDistributionVariable(holder_contributions);
             }
 
             if (burn_amount > 0) {
@@ -890,27 +853,27 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                 emit Burn(sender, burn_amount);
                 emit Transfer(sender, address(0), burn_amount);
             }
-            sender_fee_deduct = true;
+            sender_contribution_deduct = true;
         } else {
-            if (marketing_fees > 0) {
+            if (marketing_contributions > 0) {
                 _wallets[_marketing_wallet].balance = _wallets[
                     _marketing_wallet
-                ].balance.add(marketing_fees);
-                emit Transfer(recipient, _marketing_wallet, marketing_fees);
+                ].balance.add(marketing_contributions);
+                emit Transfer(recipient, _marketing_wallet, marketing_contributions);
             }
 
-            if (development_fees > 0) {
+            if (development_contributions > 0) {
                 _wallets[_development_wallet].balance = _wallets[
                     _development_wallet
-                ].balance.add(development_fees);
-                emit Transfer(recipient, _development_wallet, development_fees);
+                ].balance.add(development_contributions);
+                emit Transfer(recipient, _development_wallet, development_contributions);
             }
 
-            if (holder_fees > 0) {
-                _pending_fee_to_distribute = _pending_fee_to_distribute.add(
-                    holder_fees
+            if (holder_contributions > 0) {
+                _pending_contribution_to_distribute = _pending_contribution_to_distribute.add(
+                    holder_contributions
                 );
-                emit FeeAddedToFeeDistributionVariable(holder_fees);
+                emit ContributionAddedToContributionDistributionVariable(holder_contributions);
             }
 
             if (burn_amount > 0) {
@@ -921,19 +884,19 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
             }
         }
 
-        return (total_fees, sender_fee_deduct);
+        return (total_contributions, sender_contribution_deduct);
     }
 
-    function _fee_airdrop() internal {
+    function _contribution_airdrop() internal {
         uint256 total_eligible_token = 0;
         uint256 distribution_till_now = 0;
         uint256 amount_to_transfer;
         uint256 eligibale_account_counter = 0;
-        if (_pending_fee_to_distribute >= _fee_distribute_after) {
+        if (_pending_contribution_to_distribute >= _contribution_distribute_after) {
             for (uint256 i = 0; i < _total_holder; i++) {
                 if (
                     _wallets[_holders[i]].balance >=
-                    _fee_distribution_eligibility
+                    _contribution_distribution_eligibility
                 ) {
                     eligibale_account_counter += 1;
                     total_eligible_token = total_eligible_token.add(
@@ -944,10 +907,10 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
             for (uint256 i = 0; i < eligibale_account_counter; i++) {
                 if (
                     _wallets[_holders[i]].balance >=
-                    _fee_distribution_eligibility
+                    _contribution_distribution_eligibility
                 ) {
                     amount_to_transfer = (
-                        _pending_fee_to_distribute.mul(
+                        _pending_contribution_to_distribute.mul(
                             (_wallets[_holders[i]].balance.mul(10**_decimals))
                                 .div(total_eligible_token)
                         )
@@ -958,13 +921,13 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                     distribution_till_now += amount_to_transfer;
                 }
             }
-            emit FeeAirDropUpdate(
+            emit ContributionAirDropUpdate(
                 eligibale_account_counter,
                 distribution_till_now,
                 total_eligible_token,
                 block.timestamp
             );
-            _pending_fee_to_distribute = _pending_fee_to_distribute.sub(
+            _pending_contribution_to_distribute = _pending_contribution_to_distribute.sub(
                 distribution_till_now
             );
         }
@@ -975,46 +938,46 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         address recipient,
         uint256 amount
     ) internal {
-        require(sender != address(0), "SCOM: transfer from the zero address");
-        require(recipient != address(0), "SCOM: transfer to the zero address");
+        require(sender != address(0), "SCOLT :transfer from the zero address");
+        require(recipient != address(0), "SCOLT :transfer to the zero address");
         require(
             _wallets[sender].balance >= amount,
-            "SCOM: transfer amount exceeds balance"
+            "SCOLT :transfer amount exceeds balance"
         );
 
         if (_wallets[sender].wallet_type == type_of_wallet.UndefinedWallet) {
             // Initializing customer wallet if not in contract
             if (sender.isContract()) {
-                _create_wallet(sender, type_of_wallet.ContractWallet);
+                _create_wallet(sender, type_of_wallet.DexPairWallet, false);
             } else {
-                _create_wallet(sender, type_of_wallet.GeneralWallet);
+                _create_wallet(sender, type_of_wallet.GeneralWallet, false);
             }
         }
         if (_wallets[recipient].wallet_type == type_of_wallet.UndefinedWallet) {
             // Initializing customer wallet if not in contract
             if (recipient.isContract()) {
-                _create_wallet(recipient, type_of_wallet.ContractWallet);
+                _create_wallet(recipient, type_of_wallet.DexPairWallet, false);
             } else {
-                _create_wallet(recipient, type_of_wallet.GeneralWallet);
+                _create_wallet(recipient, type_of_wallet.GeneralWallet, false);
             }
         }
 
         // checking SCOM rules before transfer
         _checkrules(sender, recipient, amount);
 
-        uint256 total_fees;
-        bool sender_fee_deduct;
-        (total_fees, sender_fee_deduct) = _fees(sender, recipient, amount);
+        uint256 total_contributions;
+        bool sender_contribution_deduct;
+        (total_contributions, sender_contribution_deduct) = _contributions(sender, recipient, amount);
 
-        if (sender_fee_deduct == true) {
-            uint256 r_amount = amount.add(total_fees);
+        if (sender_contribution_deduct == true) {
+            uint256 r_amount = amount.add(total_contributions);
             _wallets[sender].balance = _wallets[sender].balance.sub(r_amount);
             _wallets[recipient].balance = _wallets[recipient].balance.add(
                 amount
             );
             emit Transfer(sender, recipient, amount);
         } else {
-            uint256 r_amount = amount.sub(total_fees);
+            uint256 r_amount = amount.sub(total_contributions);
             _wallets[sender].balance = _wallets[sender].balance.sub(amount);
             _wallets[recipient].balance = _wallets[recipient].balance.add(
                 r_amount
@@ -1022,7 +985,7 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
             emit Transfer(sender, recipient, r_amount);
         }
 
-        _fee_airdrop(); // check and make airdrops of fees
+        _contribution_airdrop(); // check and make airdrops of contributions
         _after_transfer_updates(sender, recipient, amount);
     }
 
@@ -1038,12 +1001,12 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         // checking rule for CTC, only GeneralWallet type user can initiate CTC Transfer
         require(
             !_msgSender().isContract(),
-            "SCOM : Contract type of wallet can not initiate C2C transfer."
+            "SCOLT : Contract type of wallet can not initiate C2C transfer."
         );
         if (!burn_or_mint) {
             require(
                 transferer_wallet.wallet_type != type_of_wallet.UndefinedWallet,
-                "SCOM : Only SCOM holder can initiate C2C transfer."
+                "SCOLT : Only SCOM holder can initiate C2C transfer."
             );
         }
         if (transferer_wallet.is_investor) {
@@ -1051,14 +1014,14 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
                 _check_time_condition(
                     block.timestamp,
                     toTimestampFromDateTime(transferer_wallet.joining_date),
-                    _inverstor_swap_lock_days
+                    _investor_swap_lock_days
                 ),
-                "SCOM : Investor account can perform any transfer after 180 days only."
+                "SCOLT : Investor account can perform any transfer after 180 days only."
             );
         }
         require(
             transferer_wallet.balance >= amount,
-            "SCOM: Insufficient balance for CTC transfer."
+            "SCOLT :Insufficient balance for CTC transfer."
         );
 
         // Adding Details To CTC
@@ -1088,23 +1051,23 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         require(
             keccak256(bytes(transferer_ctc_details.uctcid)) ==
                 keccak256(bytes(uctcid)),
-            "SCOM : Invalid Transfer token provided."
+            "SCOLT : Invalid Transfer token provided."
         );
         require(
             transferer_ctc_details.burn_or_mint == false,
-            "SCOM : Invalid Transfer Details."
+            "SCOLT : Invalid Transfer Details."
         );
         require(
             transferer_ctc_details.used == false,
-            "SCOM : Invalid Transfer Details."
+            "SCOLT : Invalid Transfer Details."
         );
         require(
             transferer_ctc_details.allowed_till >= block.timestamp,
-            "SCOM : Transfer token expired."
+            "SCOLT : Transfer token expired."
         );
         require(
             transferer_wallet.balance >= transferer_ctc_details.amount,
-            "SCOM: Insufficient balance for CTC transfer."
+            "SCOLT :Insufficient balance for CTC transfer."
         );
 
         _total_supply = _total_supply.sub(transferer_ctc_details.amount);
@@ -1139,31 +1102,31 @@ contract SafeColiseum is Context, IBEP20, Ownable, DateTime {
         require(
             keccak256(bytes(transferer_ctc_details.uctcid)) ==
                 keccak256(bytes(uctcid)),
-            "SCOM : Invalid Transfer token provided."
+            "SCOLT : Invalid Transfer token provided."
         );
         require(
             transferer_ctc_details.burn_or_mint == true,
-            "SCOM : Invalid Transfer Details."
+            "SCOLT : Invalid Transfer Details."
         );
         require(
             transferer_ctc_details.used == false,
-            "SCOM : Invalid Transfer Details."
+            "SCOLT : Invalid Transfer Details."
         );
         require(
             transferer_ctc_details.allowed_till >= block.timestamp,
-            "SCOM : Transfer token expired."
+            "SCOLT : Transfer token expired."
         );
         if (transferer_wallet.wallet_type != type_of_wallet.UndefinedWallet) {
             require(
                 transferer_wallet.wallet_type == oc_wallet_type,
-                "SCOM : Can not perform C2C transfer within differnt wallet type."
+                "SCOLT : Can not perform C2C transfer within differnt wallet type."
             );
         }
 
         // Checking if wallet is already available or not
         if (transferer_wallet.wallet_type == type_of_wallet.UndefinedWallet) {
             // Initializing customer wallet if not in contract
-            _create_wallet(transferer, oc_wallet_type);
+            _create_wallet(transferer, oc_wallet_type, false);
             transferer_wallet = _wallets[transferer];
             transferer_wallet.purchase = purchase;
             transferer_wallet.lastday_total_sell = lastday_total_sell;
