@@ -13,7 +13,7 @@ For details on token architecture : [click here](https://safecoliseum.gitbook.io
 
 ## Project Links
 
-Site : [https://safecoliseum.com](https://safecoliseum.com)
+Site : [https://safecoliseum.io](https://safecoliseum.io)
 
 White Paper : [https://safecoliseum.gitbook.io/documentations/](https://safecoliseum.gitbook.io/documentations/)
 
