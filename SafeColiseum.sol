@@ -299,10 +299,9 @@ contract SafeColiseum is Context, IBEP20, Ownable {
         address spender,
         uint256 amount
     ) private {
-        require(owner != address(0), "SCOLT :approve from the zero address");
-        require(spender != address(0), "SCOLT :approve to the zero address");
-        // require(_wallets[owner].wallet_type != Variables.type_of_wallet.GeneralWallet && _wallets[owner].wallet_type != Variables.type_of_wallet.UndefinedWallet, "SCOLT :Only registered wallet allowed for approval.");
-        //TODO : Aproval logic goes here.
+        require(owner != address(0), "SCOLT : Approve from the zero address");
+        require(spender != address(0), "SCOLT : Approve to the zero address");
+        require(_wallets[owner].balance >= amount, "SCOLT : Can not allow more than balance.");
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
