@@ -1,34 +1,31 @@
 # Safe Coliseum Token (SCOLT)
 
-A quick history about the Project so far.
-Safe Coliseum is a restructured name of the original project Coliseum. 
-The coliseum project was initially founded by Mr. David Williams, Mr. Jesus Mendoza, Mr. Dustin Weeks, Ms. Mellisa Harrel, and Mr. Benjamin Hardway from the USA.
-To perform a vision and establish an economy they decided to launch a Token with the same name Coliseum also used to known as COM. They have launched this token on ERC20 as well as BEP20 (BSC).
+Safe Coliseum is a Community, which is the combination of 3 Dimensional economical growth, The Coliseum Platform, SCOLT tokens, and the Production houses.
 
-Unfortunately, Coliseum team was not able to perform well and ICO was failed which was declared on 28th May 2021. They had 2 options, Either to refund it to Investors or selling of the project.
-
-6th July 2021, 2 of the Partners of an IT Company based in India, Hashchains Technologies LLP, already working on Blockchain Technology has decided to Purchase and Relaunch the Project. They have decided to rebrand the project as Safe Coliseum and decided to create pre-configured audited economy to the world of Crypto Currency for bumping into the Entertainment Industry
-
-For details on token architecture : [click here](https://safecoliseum.gitbook.io/documentations/product/scolt-token)
+You can learn more about it into the [Whitepaper](https://safecoliseum.gitbook.io/documentations/){:target="_blank"} of SCOLT.
 
 ## Project Links
 
-Site : [https://safecoliseum.com](https://safecoliseum.com)
+Site : [https://safecoliseum.io](https://safecoliseum.io){:target="_blank"}
 
-White Paper : [https://safecoliseum.gitbook.io/documentations/](https://safecoliseum.gitbook.io/documentations/)
+White Paper : [https://safecoliseum.gitbook.io/documentations/](https://safecoliseum.gitbook.io/documentations/){:target="_blank"}
 
 
 ## Social Media Links
 
-Facebook : [https://www.facebook.com/ColiseumSafe](https://www.facebook.com/ColiseumSafe)
+Facebook : [https://www.facebook.com/ColiseumSafe](https://www.facebook.com/ColiseumSafe){:target="_blank"}
 
-Instagram : [https://instagram.com/safe_coliseum](https://instagram.com/safe_coliseum)
+Instagram : [https://instagram.com/safe_coliseum](https://instagram.com/safe_coliseum){:target="_blank"}
 
-Twitter : [https://twitter.com/ColiseumSafe](https://twitter.com/ColiseumSafe)
+Twitter : [https://twitter.com/ColiseumSafe](https://twitter.com/ColiseumSafe){:target="_blank"}
+
+Discord : [https://discord.gg/mgNxCBCc](https://discord.gg/mgNxCBCc){:target="_blank"}
+
+Reddit : [https://reddit.com/user/Safecoliseum](https://reddit.com/user/Safecoliseum){:target="_blank"}
 
 ## Queries & Support
 
-Email : [support@safecoliseum.io](support@safecoliseum.io)
+Email : [support@safecoliseum.io](support@safecoliseum.io){:target="_blank"}
 
-Telegram : [https://t.me/SafecoliseumOfficial](https://t.me/SafecoliseumOfficial)
+Telegram : [https://t.me/SafecoliseumOfficial](https://t.me/SafecoliseumOfficial){:target="_blank"}
 

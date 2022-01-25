@@ -9,11 +9,11 @@ library Variables {
     uint256 public constant _initial_total_supply = 210000000 * 10**_decimals;
 
     // Token distribution veriables
-    uint256 public constant _pioneer_invester_supply = (11 * _initial_total_supply) / 100;
-    uint256 public constant _ifo_supply = (19 * _initial_total_supply) / 100;
+    uint256 public constant _pioneer_invester_supply = (12 * _initial_total_supply) / 100;
+    uint256 public constant _ifo_supply = (21 * _initial_total_supply) / 100;
     uint256 public constant _pool_airdrop_supply = (3 * _initial_total_supply) / 100;
-    uint256 public constant _director_supply_each = (6 * _initial_total_supply) / 100;
-    uint256 public constant _marketing_expansion_supply = (20 * _initial_total_supply) / 100;
+    uint256 public constant _director_supply_each = (5 * _initial_total_supply) / 100;
+    uint256 public constant _marketing_expansion_supply = (19 * _initial_total_supply) / 100;
     uint256 public constant _development_expansion_supply = (6 * _initial_total_supply) / 100;
     uint256 public constant _liquidity_supply = (5 * _initial_total_supply) / 100;
     uint256 public constant _future_team_supply = (10 * _initial_total_supply) / 100;
@@ -21,10 +21,10 @@ library Variables {
     uint256 public constant _investment_parter_supply = (10 * _initial_total_supply) / 100;
 
     // Transaction contribution AirDrop variable
-    uint256 public constant _contribution_distribute_after = 100 * 10**_decimals;
-    uint256 public constant _contribution_distribution_eligibility = 10 * 10**_decimals;
+    uint256 public constant _contribution_distribute_after = 700 * 10**_decimals;
+    uint256 public constant _contribution_distribution_eligibility = 700 * 10**_decimals;
     
-    uint256 public constant _profit_distribution_eligibility = 10 * 10**_decimals;
+    uint256 public constant _profit_distribution_eligibility = 1000 * 10**_decimals;
 
     // Burning till total of 50% supply
     uint256 public constant _burning_till = _initial_total_supply / 2;
@@ -37,24 +37,24 @@ library Variables {
     uint256 public constant _whale_contribution_per = 5;
 
     // below is percentage, consider _normal_contribution_per as 100%
-    uint256 public constant _normal_marketing_share = 25;
+    uint256 public constant _normal_marketing_share = 27;
     uint256 public constant _normal_development_share = 7;
     uint256 public constant _normal_holder_share = 43;
-    uint256 public constant _normal_burning_share = 25;
+    uint256 public constant _normal_burning_share = 23;
 
     // below is percentage, consider _whale_contribution_per as 100%
-    uint256 public constant _whale_marketing_share = 30;
+    uint256 public constant _whale_marketing_share = 32;
     uint256 public constant _whale_development_share = 10;
     uint256 public constant _whale_holder_share = 40;
-    uint256 public constant _whale_burning_share = 20;
+    uint256 public constant _whale_burning_share = 18;
 
     // antidump variables
     uint256 public constant _max_sell_amount_whale = 5000 * 10**_decimals; // max for whale
     uint256 public constant _max_sell_amount_normal = 2000 * 10**_decimals; // max for non-whale
-    uint256 public constant _max_concurrent_sale_day = 2;
-    uint256 public constant _cooling_days = 2;
+    uint256 public constant _max_concurrent_sale_day = 6;
+    uint256 public constant _cooling_days = 3;
     uint256 public constant _max_sell_per_director_per_day = 10000 * 10**_decimals;
-    uint256 public constant _investor_swap_lock_days = 2; // after 180 days will behave as normal purchase user.
+    uint256 public constant _investor_swap_lock_days = 180; // after 180 days will behave as normal purchase user.
 
     // Wallet specific declaration
     // UndefinedWallet : means 0 to check there is no wallet entry in Contract
@@ -144,16 +144,16 @@ library Variables {
 
     uint256 public constant _ctc_aproval_validation_timespan = 300; // In Seconds
 
-    // TEDU Specific Wallets
-    address public constant _director_wallet_1 = 0xd26a3AF81Eb0fd83f064b8c9f12AfCD923FA8F19;
-    address public constant _director_wallet_2 = 0xba44b38b7b89A251A60C506915794F5Ac9156735;
-    address public constant _marketing_wallet = 0x870d2d1af5604c265bDAf031386c1710972df625;
-    address public constant _governance_wallet = 0x97Abe576E2f52B0D262D353Ea904892516068fb5;
-    address public constant _liquidity_wallet = 0x08502f482FCb9FDE3A41866Ef41D796602f99281;
-    address public constant _pool_airdrop_wallet = 0xcA4b115F0326070d9d1833d2F8DE2882C835063D;
-    address public constant _future_team_wallet = 0x0f241406490eC9d5e292A77e6D4d405D871b4617;
-    address public constant _ifo_wallet = 0xd0F9D1eAcDceC7737B016Fb9693AB50e007F3f04;
-    address public constant _development_wallet = 0xbd2A6b7D5c6b8B23db9d6F5Eaa4735514Bacbb0c;
-    address public constant _unsold_token_wallet = 0xC65fF1B1304Fc6d87215B982F214B5b58ebe790A;
+    // SCOLT Specific Wallets
+    address public constant _director_wallet_1 = 0x42B8Ba6D6bD7cD19e132aE5701F970Df0A6b96B1;
+    address public constant _director_wallet_2 = 0x9CF71f45c110A4BD01a0Fc0ca2A2f4E9A5e48DF0;
+    address public constant _marketing_wallet = 0x548F4817aDC48Df4Abe079c61E731c3ACC216331;
+    address public constant _governance_wallet = 0x342B9C569cBaE2AF834dd13539633291A5a8d23B;
+    address public constant _liquidity_wallet = 0x27AB3d2F9eB7274092Bf67c54cff1574eA3AFfF4;
+    address public constant _pool_airdrop_wallet = 0x7aA854Bc1042df6b10F2a30981FC5DE0fDCF04D2;
+    address public constant _future_team_wallet = 0x0Cd8Bd5a0B4DF8a861704c7da1f7D0eB63b2dDa6;
+    address public constant _ifo_wallet = 0xffaFCD12D27DCF48a076C914b335B5c152d12609;
+    address public constant _development_wallet = 0x8f0070EbC10E4586fC23fc37C6F1975F07f19867;
+    address public constant _unsold_token_wallet = 0xC7008531330Ea8BBe55c6fc9b4bED018C1E0AF0e;
 
 }

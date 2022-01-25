@@ -447,7 +447,7 @@ library SCOLTLibrary {
                 ) {
                     if (variables.amount > Variables._max_sell_per_director_per_day) {
                         revert(
-                            "SCOLT : Director can only send 10000 TEDU every 24 hours"
+                            "SCOLT : Director can only send 10000 SCOLT every 24 hours"
                         );
                     }
                 } else {
@@ -456,7 +456,7 @@ library SCOLTLibrary {
                         Variables._max_sell_per_director_per_day
                     ) {
                         revert(
-                            "SCOLT : Director can only send 10000 TEDU every 24 hours"
+                            "SCOLT : Director can only send 10000 SCOLT every 24 hours"
                         );
                     }
                 }
@@ -486,7 +486,7 @@ library SCOLTLibrary {
                                 Variables._max_sell_amount_whale
                             ) {
                                 revert(
-                                    "SCOLT : You can not sell more than 5000 TEDU in past 24 hours."
+                                    "SCOLT : You can not sell more than 5000 SCOLT in past 24 hours."
                                 );
                             }
                         } else {
@@ -495,7 +495,7 @@ library SCOLTLibrary {
                                 Variables._max_sell_amount_normal
                             ) {
                                 revert(
-                                    "SCOLT : You can not sell more than 2000 TEDU in past 24 hours."
+                                    "SCOLT : You can not sell more than 2000 SCOLT in past 24 hours."
                                 );
                             }
                         }
@@ -519,13 +519,13 @@ library SCOLTLibrary {
                             ) {
                                 if (variables.amount > Variables._max_sell_amount_whale) {
                                     revert(
-                                        "SCOLT : You can not sell more than 5000 TEDU in past 24 hours."
+                                        "SCOLT : You can not sell more than 5000 SCOLT in past 24 hours."
                                     );
                                 }
                             } else {
                                 if (variables.amount > Variables._max_sell_amount_normal) {
                                     revert(
-                                        "SCOLT : You can not sell more than 2000 TEDU in past 24 hours."
+                                        "SCOLT : You can not sell more than 2000 SCOLT in past 24 hours."
                                     );
                                 }
                             }
@@ -550,7 +550,7 @@ library SCOLTLibrary {
                                 Variables._max_sell_amount_whale
                             ) {
                                 revert(
-                                    "SCOLT : You can not sell more than 5000 TEDU in past 24 hours."
+                                    "SCOLT : You can not sell more than 5000 SCOLT in past 24 hours."
                                 );
                             }
                         } else {
@@ -559,7 +559,7 @@ library SCOLTLibrary {
                                 Variables._max_sell_amount_normal
                             ) {
                                 revert(
-                                    "SCOLT : You can not sell more than 2000 TEDU in past 24 hours."
+                                    "SCOLT : You can not sell more than 2000 SCOLT in past 24 hours."
                                 );
                             }
                         }
@@ -570,13 +570,13 @@ library SCOLTLibrary {
                         ) {
                             if (variables.amount > Variables._max_sell_amount_whale) {
                                 revert(
-                                    "SCOLT : You can not sell more than 5000 TEDU in past 24 hours."
+                                    "SCOLT : You can not sell more than 5000 SCOLT in past 24 hours."
                                 );
                             }
                         } else {
                             if (variables.amount > Variables._max_sell_amount_normal) {
                                 revert(
-                                    "SCOLT : You can not sell more than 2000 TEDU in past 24 hours."
+                                    "SCOLT : You can not sell more than 2000 SCOLT in past 24 hours."
                                 );
                             }
                         }

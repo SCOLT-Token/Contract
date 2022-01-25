@@ -436,7 +436,7 @@ contract SafeColiseum is Context, IBEP20, Ownable {
         bool sender_contribution_deduct;
         address sendfrom;
 
-        // checking TEDU rules before transfer
+        // checking SCOLT rules before transfer
         SCOLTLibrary._checkrules(
             _wallets[sender],
             _wallets[recipient],
@@ -528,7 +528,7 @@ contract SafeColiseum is Context, IBEP20, Ownable {
         if (!burn_or_mint) {
             require(
                 transferer_wallet.wallet_type != Variables.type_of_wallet.UndefinedWallet,
-                "SCOLT : Only TEDU holder can initiate C2C transfer."
+                "SCOLT : Only SCOLT holder can initiate C2C transfer."
             );
         }
         if (transferer_wallet.is_investor) {
