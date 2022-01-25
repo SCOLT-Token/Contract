@@ -6,7 +6,7 @@ library Variables {
     string public constant _name = "Safe Coliseum";
     string public constant _symbol = "SCOLT";
     uint8 public constant _decimals = 8;
-    uint256 public constant _initial_total_supply = 210000000 * 10**_decimals;
+    uint256 public constant _initial_total_supply = 105000000 * 10**_decimals;
 
     // Token distribution veriables
     uint256 public constant _pioneer_invester_supply = (12 * _initial_total_supply) / 100;
